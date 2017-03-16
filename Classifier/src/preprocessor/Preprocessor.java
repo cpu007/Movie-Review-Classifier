@@ -147,7 +147,7 @@ public class Preprocessor {
                                 if(str.length() > 0) dictionary.add(str.toString());
                             }
                             else {
-                                Arrays.stream(next.split("\\p{Punct}"))
+                                Arrays.stream(next.split("["+PUNCTUATION+"]"))
                                       .forEach(dictionary::add);
                             }
                         }
