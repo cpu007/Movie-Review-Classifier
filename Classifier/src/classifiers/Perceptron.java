@@ -17,6 +17,7 @@ public class Perceptron {
     private HashMap<String, Integer> indexMap;
     private double learningRate;
     private final Mode mode;
+
     public static enum Label{
         POSITIVE(1),
         NEGATIVE(-1);
@@ -38,6 +39,10 @@ public class Perceptron {
         this.mode = mode;
     }
     
+     public Mode getMode() {
+        return mode;
+    }
+    
     public void randomizeWeights(double bias){
         weightMatrix[0] = bias;
         for(int i = 1; i <= dimension; ++i) weightMatrix[i] = Math.random()*2 - 1;
@@ -46,19 +51,24 @@ public class Perceptron {
     public void train(TreeMap<String, Integer> vector, Label label){
         double output = weightMatrix[0];
         int i = 1;
-        for (String key : vector.keySet()) {
-            output += vector.get(key) * weightMatrix[indexMap.get(key)+1];
+        if(mode == Mode.BINARY){
+            for (String key : vector.keySet()) 
+                output += vector.get(key) * weightMatrix[indexMap.get(key)+1];
+        }
+        else{
+            for (String key : vector.keySet()) 
+                output += (1+Math.log(vector.get(key))) * weightMatrix[indexMap.get(key)+1];
         }
         updateWeights(vector, squash(output), label);
     }
     
     private void updateWeights(TreeMap<String, Integer> vector, Label guess, Label label){
-        for (String key : vector.keySet()) {
-            weightMatrix[indexMap.get(key)+1] = weightMatrix[indexMap.get(key)+1] + learningRate * (label.value - guess.value) * vector.get(key);
-//            weightMatrix[i] = 
-//                    weightMatrix[i] + 
-//                    learningRate * (label.value - guess.value) * vector.get(dictionary[j]);
-        }
+        if(mode == Mode.BINARY)
+            for (String key : vector.keySet()) 
+                weightMatrix[indexMap.get(key)+1] = weightMatrix[indexMap.get(key)+1] + learningRate * (label.value - guess.value) * vector.get(key);
+        else
+            for (String key : vector.keySet()) 
+                weightMatrix[indexMap.get(key)+1] = weightMatrix[indexMap.get(key)+1] + learningRate * (label.value - guess.value) * (1+Math.log(vector.get(key)));
     }
     
     private Label squash(double input){
@@ -68,8 +78,13 @@ public class Perceptron {
     public Label test(TreeMap<String, Integer> vector){
         double output = weightMatrix[0];
         int i = 1;
-        for (String key : vector.keySet()) {
-            output += vector.get(key) * weightMatrix[indexMap.get(key)+1];
+        if(mode == Mode.BINARY){
+            for (String key : vector.keySet()) 
+                output += vector.get(key) * weightMatrix[indexMap.get(key)+1];
+        }
+        else{
+            for (String key : vector.keySet()) 
+                output += (1+Math.log(vector.get(key))) * weightMatrix[indexMap.get(key)+1];
         }
         return squash(output);
     }

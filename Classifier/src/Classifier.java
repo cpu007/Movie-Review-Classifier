@@ -19,7 +19,7 @@ import static preprocessor.Preprocessor.PUNCTUATION;
 
 public class Classifier {
 
-    private static final int ITERATIONS = 30, FOLDS = 5;
+    private static final int ITERATIONS = 50, FOLDS = 5;
     /**
      * @param args the command line arguments
      */
@@ -31,7 +31,7 @@ public class Classifier {
         }
         int dimension = processor.getDictionary().size();
         
-        Perceptron perceptron = new Perceptron(processor.getDictionary(), dimension, 1, Mode.BINARY);
+        Perceptron perceptron = new Perceptron(processor.getDictionary(), dimension, 1, processor.getMode());
         perceptron.randomizeWeights(0);
         
         for(int k = 0; k < ITERATIONS; ++k){
@@ -50,23 +50,36 @@ public class Classifier {
                                         int index = -1;
                                         if((index = PUNCTUATION.indexOf(next.charAt(j))) > 0){
                                             if(str.length() > 0) {
-                                                vector.put(str.toString(), 1);
+                                                if(perceptron.getMode() == Mode.BINARY)
+                                                    vector.put(str.toString(), 1);
+                                                else 
+                                                  vector.put(str.toString(), (vector.get(str.toString()) == null)? 1 : vector.get(str.toString())+1);
                                                 str = new StringBuilder();
                                             }
                                             String temp = new StringBuilder().append(next.charAt(j)).toString();
-                                            vector.put(temp, 1);
+                                            if(perceptron.getMode() == Mode.BINARY)
+                                                vector.put(temp, 1);
+                                            else 
+                                              vector.put(temp, (vector.get(temp) == null)? 1 : vector.get(temp)+1);
                                         }
                                         else{
                                             str.append(next.charAt(j));
                                         }
                                     }
-                                    if(str.length() > 0) 
-                                        vector.put(str.toString(), 1);
+                                    if(str.length() > 0){ 
+                                        if(perceptron.getMode() == Mode.BINARY)
+                                            vector.put(str.toString(), 1);
+                                        else 
+                                          vector.put(str.toString(), (vector.get(str.toString()) == null)? 1 : vector.get(str.toString())+1);
+                                    }
                                 }
                                 else {
                                     Arrays.stream(next.split("["+PUNCTUATION+"]"))
                                           .forEach((s) ->{
+                                              if(perceptron.getMode() == Mode.BINARY)
                                                   vector.put(s, 1);
+                                              else 
+                                                  vector.put(s, (vector.get(s) == null)? 1 : vector.get(s)+1);
                                           });
                                 }
                             }
@@ -85,7 +98,6 @@ public class Classifier {
         for(int i = 0; i < FOLDS-1; ++i){
             for(File file : processor.getFold(i).keySet()){
                 TreeMap<String, Integer> vector = new TreeMap<>();
-                //processor.getDictionary().forEach(s -> {vector.put(s, 0);});
                  try (
                         FileInputStream finStream = new FileInputStream(file); 
                         Scanner fileReader = new Scanner(finStream)
@@ -98,23 +110,36 @@ public class Classifier {
                                         int index = -1;
                                         if((index = PUNCTUATION.indexOf(next.charAt(j))) > 0){
                                             if(str.length() > 0) {
-                                                vector.put(str.toString(), 1);
+                                                if(perceptron.getMode() == Mode.BINARY)
+                                                    vector.put(str.toString(), 1);
+                                                else 
+                                                  vector.put(str.toString(), (vector.get(str.toString()) == null)? 1 : vector.get(str.toString())+1);
                                                 str = new StringBuilder();
                                             }
                                             String temp = new StringBuilder().append(next.charAt(j)).toString();
-                                            vector.put(temp, 1);
+                                            if(perceptron.getMode() == Mode.BINARY)
+                                                vector.put(temp, 1);
+                                            else 
+                                              vector.put(temp, (vector.get(temp) == null)? 1 : vector.get(temp)+1);
                                         }
                                         else{
                                             str.append(next.charAt(j));
                                         }
                                     }
-                                    if(str.length() > 0) 
-                                        vector.put(str.toString(), 1);
+                                    if(str.length() > 0){ 
+                                        if(perceptron.getMode() == Mode.BINARY)
+                                            vector.put(str.toString(), 1);
+                                        else 
+                                          vector.put(str.toString(), (vector.get(str.toString()) == null)? 1 : vector.get(str.toString())+1);
+                                    }
                                 }
                                 else {
                                     Arrays.stream(next.split("["+PUNCTUATION+"]"))
                                           .forEach((s) ->{
-                                                  vector.put(s, 1);
+                                              if(perceptron.getMode() == Mode.BINARY)
+                                                vector.put(s, 1);
+                                              else 
+                                                vector.put(s, (vector.get(s) == null)? 1 : vector.get(s)+1);
                                           });
                                 }
                         }
@@ -131,13 +156,13 @@ public class Classifier {
                  numTotal++;
             }
         }
+        System.out.println("Training Data:");
         System.out.println("Total: "+numTotal+"\nCorrect = "+numCorrect);
         System.out.println("Accuracy = "+((double)numCorrect/(double)numTotal)*100.+ "%");
         numTotal = 0;
         numCorrect = 0;
         for(File file : processor.getFold(FOLDS-1).keySet()){
                 TreeMap<String, Integer> vector = new TreeMap<>();
-                //processor.getDictionary().forEach(s -> {vector.put(s, 0);});
                  try (
                         FileInputStream finStream = new FileInputStream(file); 
                         Scanner fileReader = new Scanner(finStream)
@@ -150,24 +175,36 @@ public class Classifier {
                                         int index = -1;
                                         if((index = PUNCTUATION.indexOf(next.charAt(j))) > 0){
                                             if(str.length() > 0) {
-                                                vector.put(str.toString(), 1);
+                                                if(perceptron.getMode() == Mode.BINARY)
+                                                    vector.put(str.toString(), 1);
+                                                else 
+                                                  vector.put(str.toString(), (vector.get(str.toString()) == null)? 1 : vector.get(str.toString())+1);
                                                 str = new StringBuilder();
                                             }
                                             String temp = new StringBuilder().append(next.charAt(j)).toString();
-                                            vector.put(temp, 1);
+                                            if(perceptron.getMode() == Mode.BINARY)
+                                                vector.put(temp, 1);
+                                            else 
+                                              vector.put(temp, (vector.get(temp) == null)? 1 : vector.get(temp)+1);
                                         }
                                         else{
                                             str.append(next.charAt(j));
                                         }
                                     }
-                                    if(str.length() > 0) 
-                                        vector.put(str.toString(), 1);
+                                    if(str.length() > 0){ 
+                                        if(perceptron.getMode() == Mode.BINARY)
+                                            vector.put(str.toString(), 1);
+                                        else 
+                                          vector.put(str.toString(), (vector.get(str.toString()) == null)? 1 : vector.get(str.toString())+1);
+                                    }
                                 }
                                 else {
                                     Arrays.stream(next.split("["+PUNCTUATION+"]"))
                                           .forEach((s) ->{
-                                                  if(processor.getDictionary().contains(s))
-                                                      vector.put(s, 1);
+                                              if(perceptron.getMode() == Mode.BINARY)
+                                                  vector.put(s, 1);
+                                              else 
+                                                  vector.put(s, (vector.get(s) == null)? 1 : vector.get(s)+1);
                                           });
                                 }
                         }
@@ -183,6 +220,7 @@ public class Classifier {
                  if(perceptron.test(vector) == correct) numCorrect++;
                  numTotal++;
             }
+        System.out.println("Test Data:");
         System.out.println("\nTotal: "+numTotal+"\nCorrect = "+numCorrect);
         System.out.println("Accuracy = "+((double)numCorrect/(double)numTotal)*100.+ "%");
     }

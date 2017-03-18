@@ -31,7 +31,7 @@ public class Preprocessor {
         BINARY
     };
     
-    private Mode mode;
+    private Mode mode = Mode.BINARY;
     private boolean punctuation;
 
     public boolean isPunctuation() {
@@ -167,6 +167,10 @@ public class Preprocessor {
                 }
             }
         }
+    }
+    
+    public Mode getMode() {
+        return mode;
     }
     
     public TreeSet<String> getDictionary(){
