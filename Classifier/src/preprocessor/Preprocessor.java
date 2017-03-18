@@ -1,5 +1,6 @@
 package preprocessor;
 
+import classifiers.Perceptron.Label;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,9 +22,9 @@ public class Preprocessor {
     
     private static int FOLDS = 5;
     private String posDirectory, negDirectory;
-    private ArrayList<LinkedList<File>> folds;
+    private ArrayList<TreeMap<File, Label>> folds;
     private TreeSet<String> dictionary;
-    private static final String PUNCTUATION = "!.,\\/",
+    public static final String PUNCTUATION = "!.,\\/",
                                 NUMBER = "0123456789";
     public static enum Mode{
         FREQUENCY,
@@ -31,6 +33,10 @@ public class Preprocessor {
     
     private Mode mode;
     private boolean punctuation;
+
+    public boolean isPunctuation() {
+        return punctuation;
+    }
     
     public Preprocessor() {}
     
@@ -106,23 +112,23 @@ public class Preprocessor {
     
     public void partition(int numFolds) {
         folds = new ArrayList<>(numFolds);
-        for(int i = 0; i < numFolds; ++i) folds.add(new LinkedList<>());
+        for(int i = 0; i < numFolds; ++i) folds.add(new TreeMap<>());
         File[]  posFiles = new File(posDirectory).listFiles(),
                 negFiles = new File(negDirectory).listFiles();
         
         // Build partitions of data (k-folds)
         for(int i = 0, j = 0, k = 0; i < posFiles.length || j < negFiles.length; ++i, ++j, ++k){
-            if(i < posFiles.length) folds.get(k % numFolds).add(posFiles[i]);
-            if(j < negFiles.length) folds.get(k % numFolds).add(negFiles[j]);
+            if(i < posFiles.length) folds.get(k % numFolds).put(posFiles[i], Label.POSITIVE);
+            if(j < negFiles.length) folds.get(k % numFolds).put(negFiles[j], Label.NEGATIVE);
         }
     }
     
     public void buildDictionary(int testFold){
         if(testFold >= folds.size()) return;
-        dictionary = new TreeSet<>();
+        if(dictionary == null) dictionary = new TreeSet<>();
         for(int i = 0; i < folds.size(); ++i){
             if(i != testFold) {
-                for(File file : folds.get(i)){
+                for(File file : folds.get(i).keySet()){
                     try (
                         FileInputStream finStream = new FileInputStream(file); 
                         Scanner fileReader = new Scanner(finStream)
@@ -165,6 +171,10 @@ public class Preprocessor {
     
     public TreeSet<String> getDictionary(){
         return dictionary;
+    }
+    
+    public TreeMap<File, Label> getFold(int index){
+        return folds.get(index);
     }
     
     public void printDictionary(){
