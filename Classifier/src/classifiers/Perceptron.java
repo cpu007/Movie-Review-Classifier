@@ -38,10 +38,10 @@ public class Perceptron {
         this.mode = mode;
     }
     
-     public Mode getMode() {
+    public Mode getMode() {
         return mode;
     }
-    
+         
     public void randomizeWeights(double bias){
         weightMatrix[0] = bias;
         for(int i = 1; i <= dimension; ++i) weightMatrix[i] = Math.random()*2 - 1;
