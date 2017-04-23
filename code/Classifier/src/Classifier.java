@@ -22,7 +22,7 @@ public class Classifier {
     
     private static final int ITERATIONS = 60, FOLDS = 5;
     
-    private static String[] help_menu = { 
+    private final static String[] HELP_MENU = { 
         "A movie review classification tool which supports multiple methods of "
         + "classification.\n" ,
         "Usage: java Classifier <flags> posDirectory negDirectory <flags>\n",
@@ -93,7 +93,7 @@ public class Classifier {
     }
     
     private static void printHelp() {
-        Arrays.stream(help_menu).forEach(System.out::println);
+        Arrays.stream(HELP_MENU).forEach(System.out::println);
         System.exit(0);
     }
     

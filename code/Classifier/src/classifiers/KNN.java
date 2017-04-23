@@ -3,6 +3,7 @@ package classifiers;
 import classifiers.Perceptron.Label;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
 
 public class KNN {
@@ -94,6 +95,7 @@ public class KNN {
         }
     }
     
+    // O(n * log K)
     private boolean addToHeap(Map<String, Integer> e){
         if(heapIndex >= K){
             // O((n-k) * log(k))
@@ -105,7 +107,7 @@ public class KNN {
             else return false;
         }
         else{
-            // O(k)
+            // O(k * log(K))
             int index = heapIndex++, parentIndex;
             Map<String, Integer> temp;
             heap[index] = e;
@@ -122,15 +124,21 @@ public class KNN {
     public void addVector(Map<String, Integer> e, Label label){
         vectorLabels.put(e, label);
     }
-    
     public Label testVector(Map<String, Integer> e){
         int numPos = 0, numNeg = 0;
         heapIndex = 0;
         vectorDistancePairs.clear();
-        for(Map<String, Integer> vector : vectorLabels.keySet()){
-            vectorDistancePairs.put(vector, distance.apply(e, vector));
-            addToHeap(vector); 
-        }
+        ReentrantLock lock = new ReentrantLock();
+        vectorLabels.keySet().parallelStream().forEach((vector) -> {
+            double temp = distance.apply(e, vector);
+            lock.lock();
+            try{
+                vectorDistancePairs.put(vector, temp);
+                addToHeap(vector); 
+            } finally{
+                lock.unlock();
+            }
+        });
         for(Map<String, Integer> vector : heap){
             if(vectorLabels.get(vector) == Label.POSITIVE) ++numPos;
             else ++numNeg;
