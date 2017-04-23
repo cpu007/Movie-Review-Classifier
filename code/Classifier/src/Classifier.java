@@ -77,7 +77,7 @@ public class Classifier {
         Preprocessor processor = new Preprocessor(newArgsArray);
         processor.partition(FOLDS);
         
-        int testFold = 0;
+        int testFold = 3;
         for(int i = 0; i < FOLDS; ++i){
             if(i == testFold) continue;
             processor.buildDictionary(i);
