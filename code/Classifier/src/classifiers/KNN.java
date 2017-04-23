@@ -3,18 +3,14 @@ package classifiers;
 import classifiers.Perceptron.Label;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.function.BiFunction;
-import preprocessor.Preprocessor.Mode;
 
 public class KNN {
     public static enum Distance{
         EUCLIDEAN, MANHATTAN;
     };
     
-    private Mode mode;
-    private String[] dictionary;
-    private BiFunction<Map<String,Integer>, Map<String, Integer>, Double> distance;
+    private final BiFunction<Map<String,Integer>, Map<String, Integer>, Double> distance;
     private int K = 0;
     
     private HashMap<Map<String, Integer>, Label> vectorLabels;
@@ -22,19 +18,15 @@ public class KNN {
     private Map<String, Integer>[] heap;
     private int heapIndex = 0;
     
-    private void init(int K, TreeSet<String> dictionary, Mode mode){
+    private void init(int K){
         this.K = K;
         vectorLabels = new HashMap<>();
         vectorDistancePairs = new HashMap<>();
         heap = (Map<String, Integer>[]) new Map<?,?>[K];
-        this.mode = mode;
-        this.dictionary = new String[dictionary.size()];
-        this.dictionary = dictionary.toArray(this.dictionary);
     }
     
-    public KNN(int K, TreeSet<String> dictionary, Mode mode, Distance distance){
-        if(dictionary == null) throw new IllegalArgumentException();
-        init(K, dictionary, mode);
+    public KNN(int K, Distance distance){
+        init(K);
         if(distance == Distance.MANHATTAN){
             this.distance = (p,q) -> {
                 double result = 0, pNorm = 0, qNorm = 0;
@@ -82,9 +74,8 @@ public class KNN {
     }
     
     
-    public KNN(int K, TreeSet<String> dictionary, Mode mode, BiFunction<Map<String,Integer>, Map<String, Integer>, Double> distance){
-        if(dictionary == null) throw new IllegalArgumentException();
-        init(K, dictionary, mode);
+    public KNN(int K, BiFunction<Map<String,Integer>, Map<String, Integer>, Double> distance){
+        init(K);
         this.distance  = distance;
     }
     
@@ -135,7 +126,7 @@ public class KNN {
         vectorLabels.put(e, label);
     }
     
-    public Label calculateLabel(Map<String, Integer> e){
+    public Label testVector(Map<String, Integer> e){
         int numPos = 0, numNeg = 0;
         heapIndex = 0;
         vectorDistancePairs.clear();

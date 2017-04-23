@@ -5,6 +5,7 @@
 import classifiers.Bayes;
 import classifiers.KNN;
 import classifiers.KNN.Distance;
+import classifiers.NearestCentroid;
 import classifiers.Perceptron;
 import classifiers.Perceptron.Label;
 import java.io.File;
@@ -63,7 +64,8 @@ public class Classifier {
             trainAndTestBayes(processor, testFold);
         */
         
-        Classifier.trainAndTestKNN(processor, testFold);
+        //Classifier.trainAndTestKNN(processor, testFold);
+        Classifier.trainAndTestNearestCentroid(processor, testFold);
         
     }
     
@@ -374,9 +376,8 @@ public class Classifier {
     
     
     public static void trainAndTestKNN(Preprocessor processor, int testFold){
-        int dimension = processor.getDictionary().size();
         int K = 25; // 19, 25, 33
-        KNN knn = new KNN(K, processor.getDictionary(), processor.getMode(), Distance.EUCLIDEAN);
+        KNN knn = new KNN(K, Distance.EUCLIDEAN);
         
         for(int i = 0; i < FOLDS; ++i){
             if(i == testFold) continue;
@@ -494,7 +495,156 @@ public class Classifier {
                     } catch (IOException e){
                         Logger.getLogger(Preprocessor.class.getName()).log(Level.SEVERE, null, e);
                     }
-                 Label actual = processor.getFold(testFold).get(file), result = knn.calculateLabel(vector);
+                 Label actual = processor.getFold(testFold).get(file), result = knn.testVector(vector);
+                 if(result == Label.POSITIVE) {
+                     if(result == actual) truePos++;
+                     else falsePos++;
+                 }
+                 else {
+                     if(result == actual) trueNeg++;
+                     else falseNeg++;
+                 }
+                 if(result == actual) numCorrect++;
+                 numTotal++;
+            }
+        double precisionPos = 0, precisionNeg = 0, recallPos = 0, recallNeg = 0;
+        System.out.println("Test Data:");
+        System.out.println("\nTotal: "+numTotal+"\nCorrect = "+numCorrect);
+        System.out.println("True Positives = "+truePos);
+        System.out.println("False Positives = "+falsePos);
+        System.out.println("True Negatives = "+trueNeg);
+        System.out.println("False Negatives = "+falseNeg);
+        System.out.println("Precision+ = "+(precisionPos = (((double)truePos)/((double)truePos+(double)falsePos))));
+        System.out.println("Precision- = "+(precisionNeg = (((double)trueNeg)/((double)trueNeg+(double)falseNeg))));
+        System.out.println("Recall+ = "+(recallPos = (((double)truePos)/((double)truePos+(double)falseNeg))));
+        System.out.println("Recall- = "+(recallNeg = (((double)trueNeg)/((double)trueNeg+(double)falsePos))));
+        System.out.println("Accuracy = "+((double)numCorrect/(double)numTotal)*100.+ "%");
+        System.out.println("Precision = "+(precisionPos+precisionNeg)/2.);
+        System.out.println("Recall = "+(recallPos+recallNeg)/2.);
+    }
+    
+    public static void trainAndTestNearestCentroid(Preprocessor processor, int testFold){
+        NearestCentroid nearestCentroid = new NearestCentroid(processor.getDictionary(), NearestCentroid.Distance.MANHATTAN);
+        
+        for(int i = 0; i < FOLDS; ++i){
+            if(i == testFold) continue;
+            for(File file : processor.getFold(i).keySet()){
+                HashMap<String, Integer> vector = new HashMap<>();
+                 try (
+                        FileInputStream finStream = new FileInputStream(file); 
+                        Scanner fileReader = new Scanner(finStream)
+                    ) {
+                        while(fileReader.hasNext()){
+                            String next = fileReader.next();
+                            if(processor.isPunctuation()){
+                                StringBuilder str = new StringBuilder();
+                                for(int j = 0; j < next.length(); ++j){
+                                    int index = -1;
+                                    if((index = PUNCTUATION.indexOf(next.charAt(j))) > 0){
+                                        if(str.length() > 0) {
+                                            if(processor.getMode() == Mode.BINARY)
+                                                vector.put(str.toString(), 1);
+                                            else 
+                                              vector.put(str.toString(), (vector.get(str.toString()) == null)? 1 : vector.get(str.toString())+1);
+                                            str = new StringBuilder();
+                                        }
+                                        String temp = new StringBuilder().append(next.charAt(j)).toString();
+                                        if(processor.getMode() == Mode.BINARY)
+                                            vector.put(temp, 1);
+                                        else 
+                                          vector.put(temp, (vector.get(temp) == null)? 1 : vector.get(temp)+1);
+                                    }
+                                    else{
+                                        str.append(next.charAt(j));
+                                    }
+                                }
+                                if(str.length() > 0){ 
+                                    if(processor.getMode() == Mode.BINARY)
+                                        vector.put(str.toString(), 1);
+                                    else 
+                                      vector.put(str.toString(), (vector.get(str.toString()) == null)? 1 : vector.get(str.toString())+1);
+                                }
+                            }
+                            else {
+                                Arrays.stream(next.split("["+PUNCTUATION+"]"))
+                                      .forEach((s) ->{
+                                          if(processor.getMode() == Mode.BINARY)
+                                              vector.put(s, 1);
+                                          else 
+                                              vector.put(s, (vector.get(s) == null)? 1 : vector.get(s)+1);
+                                      });
+                            }
+                        }
+                        if(fileReader.ioException() != null) 
+                            throw fileReader.ioException();
+                    } catch (FileNotFoundException e) {
+                        Logger.getLogger(Preprocessor.class.getName()).log(Level.SEVERE, null, e);
+                    } catch (IOException e){
+                        Logger.getLogger(Preprocessor.class.getName()).log(Level.SEVERE, null, e);
+                    }
+                 nearestCentroid.addVector(vector, processor.getFold(i).get(file));
+            }
+        }
+        
+        nearestCentroid.finishedTraining();
+
+        int numTotal = 0, numCorrect = 0, truePos = 0, falsePos = 0, trueNeg = 0, falseNeg = 0;
+        // Measure Accuracy on test fold
+        for(File file : processor.getFold(testFold).keySet()){
+                HashMap<String, Integer> vector = new HashMap<>();
+                 try (
+                        FileInputStream finStream = new FileInputStream(file); 
+                        Scanner fileReader = new Scanner(finStream)
+                    ) {
+                        while(fileReader.hasNext()){
+                            String next = fileReader.next();
+                                if(processor.isPunctuation()){
+                                    StringBuilder str = new StringBuilder();
+                                    for(int j = 0; j < next.length(); ++j){
+                                        int index = -1;
+                                        if((index = PUNCTUATION.indexOf(next.charAt(j))) > 0){
+                                            if(str.length() > 0) {
+                                                if(processor.getMode() == Mode.BINARY)
+                                                    vector.put(str.toString(), 1);
+                                                else 
+                                                  vector.put(str.toString(), (vector.get(str.toString()) == null)? 1 : vector.get(str.toString())+1);
+                                                str = new StringBuilder();
+                                            }
+                                            String temp = new StringBuilder().append(next.charAt(j)).toString();
+                                            if(processor.getMode() == Mode.BINARY)
+                                                vector.put(temp, 1);
+                                            else 
+                                              vector.put(temp, (vector.get(temp) == null)? 1 : vector.get(temp)+1);
+                                        }
+                                        else{
+                                            str.append(next.charAt(j));
+                                        }
+                                    }
+                                    if(str.length() > 0){ 
+                                        if(processor.getMode() == Mode.BINARY)
+                                            vector.put(str.toString(), 1);
+                                        else 
+                                          vector.put(str.toString(), (vector.get(str.toString()) == null)? 1 : vector.get(str.toString())+1);
+                                    }
+                                }
+                                else {
+                                    Arrays.stream(next.split("["+PUNCTUATION+"]"))
+                                          .forEach((s) ->{
+                                              if(processor.getMode() == Mode.BINARY)
+                                                  vector.put(s, 1);
+                                              else 
+                                                  vector.put(s, (vector.get(s) == null)? 1 : vector.get(s)+1);
+                                          });
+                                }
+                        }
+                        if(fileReader.ioException() != null) 
+                            throw fileReader.ioException();
+                    } catch (FileNotFoundException e) {
+                        Logger.getLogger(Preprocessor.class.getName()).log(Level.SEVERE, null, e);
+                    } catch (IOException e){
+                        Logger.getLogger(Preprocessor.class.getName()).log(Level.SEVERE, null, e);
+                    }
+                 Label actual = processor.getFold(testFold).get(file), result = nearestCentroid.testVector(vector);
                  if(result == Label.POSITIVE) {
                      if(result == actual) truePos++;
                      else falsePos++;
