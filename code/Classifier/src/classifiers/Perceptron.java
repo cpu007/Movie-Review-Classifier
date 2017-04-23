@@ -1,6 +1,7 @@
 package classifiers;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -49,7 +50,7 @@ public class Perceptron {
         for(int i = 1; i <= dimension; ++i) weightMatrix[i] = random.nextGaussian()*2 - 1;
     }
     
-    public void train(TreeMap<String, Integer> vector, Label label){
+    public void train(Map<String, Integer> vector, Label label){
         double output = weightMatrix[0];
         int i = 1;
         if(mode == Mode.BINARY){
@@ -63,7 +64,7 @@ public class Perceptron {
         updateWeights(vector, squash(output), label);
     }
     
-    private void updateWeights(TreeMap<String, Integer> vector, Label guess, Label label){
+    private void updateWeights(Map<String, Integer> vector, Label guess, Label label){
         if(mode == Mode.BINARY)
             for (String key : vector.keySet()) 
                 weightMatrix[indexMap.get(key)+1] = weightMatrix[indexMap.get(key)+1] + learningRate * (label.value - guess.value) * vector.get(key);
@@ -76,7 +77,7 @@ public class Perceptron {
         return (input < 0) ? Label.NEGATIVE : Label.POSITIVE;
     }
     
-    public Label test(TreeMap<String, Integer> vector){
+    public Label test(Map<String, Integer> vector){
         double output = weightMatrix[0];
         int i = 1;
         if(mode == Mode.BINARY){

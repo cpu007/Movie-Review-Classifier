@@ -2,6 +2,7 @@ package classifiers;
 
 import classifiers.Perceptron.Label;
 import java.io.File;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import preprocessor.Preprocessor.Mode;
@@ -31,7 +32,7 @@ public class Bayes {
         this.negCount = new TreeMap<>();
     }
     
-    public void train(File file, TreeMap<String, Integer> vector, Label label){
+    public void train(File file, Map<String, Integer> vector, Label label){
         if(label == Label.POSITIVE){
             numPos++;
             vector.keySet().forEach((s) -> {
@@ -46,7 +47,7 @@ public class Bayes {
         }
     }
     
-    public Label test(TreeMap<String, Integer> vector){
+    public Label test(Map<String, Integer> vector){
         double posProb = 0, negProb = 0;
         final double m = 1., p = .5;
         for(String word : dictionary){

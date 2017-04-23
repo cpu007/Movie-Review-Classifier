@@ -7,9 +7,6 @@ import java.util.TreeSet;
 import java.util.function.BiFunction;
 
 public class NearestCentroid {
-     public static enum Distance{
-        EUCLIDEAN, MANHATTAN;
-    };
      
     private String[] dictionary;
     private final BiFunction<Map<String,Integer>, Map<String, Double>, Double> distance;
@@ -98,7 +95,6 @@ public class NearestCentroid {
     }
     
     public Label testVector(Map<String, Integer> vector){
-        double x = distance.apply(vector, positiveCentroid), y = distance.apply(vector, negativeCentroid);
-        return (x < y)? Label.POSITIVE : Label.NEGATIVE;
+        return (distance.apply(vector, positiveCentroid) < distance.apply(vector, negativeCentroid))? Label.POSITIVE : Label.NEGATIVE;
     }
 }

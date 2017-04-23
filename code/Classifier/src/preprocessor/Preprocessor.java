@@ -7,7 +7,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -167,6 +168,64 @@ public class Preprocessor {
                 }
             }
         }
+    }
+    
+    public Map<String, Integer> getVectorFromFile(File file){
+        HashMap<String, Integer> vector = new HashMap<>();
+        // Tokenize the file appropriately and transform into vector
+         try (
+                FileInputStream finStream = new FileInputStream(file); 
+                Scanner fileReader = new Scanner(finStream)
+            ) {
+                while(fileReader.hasNext()){
+                    String next = fileReader.next();
+                    if(punctuation){
+                        StringBuilder str = new StringBuilder();
+                        for(int j = 0; j < next.length(); ++j){
+                            int index = -1;
+                            if((index = PUNCTUATION.indexOf(next.charAt(j))) > 0){
+                                if(str.length() > 0) {
+                                    if(mode == Mode.BINARY)
+                                        vector.put(str.toString(), 1);
+                                    else 
+                                      vector.put(str.toString(), (vector.get(str.toString()) == null)? 1 : vector.get(str.toString())+1);
+                                    str = new StringBuilder();
+                                }
+                                String temp = new StringBuilder().append(next.charAt(j)).toString();
+                                if(mode == Mode.BINARY)
+                                    vector.put(temp, 1);
+                                else 
+                                  vector.put(temp, (vector.get(temp) == null)? 1 : vector.get(temp)+1);
+                            }
+                            else{
+                                str.append(next.charAt(j));
+                            }
+                        }
+                        if(str.length() > 0){ 
+                            if(mode == Mode.BINARY)
+                                vector.put(str.toString(), 1);
+                            else 
+                              vector.put(str.toString(), (vector.get(str.toString()) == null)? 1 : vector.get(str.toString())+1);
+                        }
+                    }
+                    else {
+                        Arrays.stream(next.split("["+PUNCTUATION+"]"))
+                              .forEach((s) ->{
+                                  if(getMode() == Mode.BINARY)
+                                      vector.put(s, 1);
+                                  else 
+                                      vector.put(s, (vector.get(s) == null)? 1 : vector.get(s)+1);
+                              });
+                    }
+                }
+                if(fileReader.ioException() != null) 
+                    throw fileReader.ioException();
+            } catch (FileNotFoundException e) {
+                Logger.getLogger(Preprocessor.class.getName()).log(Level.SEVERE, null, e);
+            } catch (IOException e){
+                Logger.getLogger(Preprocessor.class.getName()).log(Level.SEVERE, null, e);
+            }
+        return vector;
     }
     
     public Mode getMode() {

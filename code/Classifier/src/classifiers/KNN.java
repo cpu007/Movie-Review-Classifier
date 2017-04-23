@@ -6,9 +6,6 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 public class KNN {
-    public static enum Distance{
-        EUCLIDEAN, MANHATTAN;
-    };
     
     private final BiFunction<Map<String,Integer>, Map<String, Integer>, Double> distance;
     private int K = 0;
