@@ -44,7 +44,7 @@ public class Classifier {
         CLASSIFIERS classifier = CLASSIFIERS.PERCEPTRON;
         ArrayList<String> newArgs = new ArrayList<>();
         String[] newArgsArray;
-        int K = 25; // 19, 25, 33
+        int K = 13; // 5, 9, 13, 15
         Distance distance = Distance.EUCLIDEAN;
         for(String arg : args){
             if(arg.trim().equalsIgnoreCase("--perceptron"))
